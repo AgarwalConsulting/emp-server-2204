@@ -3,8 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -62,6 +66,16 @@ func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 // 	}
 // }
 
+func LoggingMiddleWare(h http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		begin := time.Now()
+
+		h.ServeHTTP(w, req)
+
+		log.Printf("%s %s took %s\n", req.Method, req.URL, time.Since(begin))
+	}
+}
+
 func main() {
 	r := mux.NewRouter()
 	// r := http.NewServeMux()
@@ -82,5 +96,6 @@ func main() {
 	// r.HandleFunc("/employees", EmployeesIndexHandler)
 	// r.HandleFunc("/employees", EmployeeCreateHandler)
 
-	http.ListenAndServe(":8000", r)
+	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
+	// http.ListenAndServe(":8000", LoggingMiddleWare(r))
 }
