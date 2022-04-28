@@ -18,3 +18,9 @@ Update          Update        PUT                   /employees/{id}             
 Update          Update        PATCH                 /employees/{id}             {some attrs}            {...}
 Destroy         Destroy       DELETE                /employees/{id}               -                     - / {...}
 ```
+
+## Clean Code Architecture
+
+- MVC => {Model, View, Controller}
+
+- Clean Code Architecture => {Entities, Repository, Transport (HTTP, gRPC, html), Service}

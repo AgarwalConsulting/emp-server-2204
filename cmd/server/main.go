@@ -8,16 +8,13 @@ import (
 	"os"
 	"time"
 
+	"algogrit.com/emp-server/employees/repository"
+	"algogrit.com/emp-server/employees/service"
+	"algogrit.com/emp-server/entities"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
-
-type Employee struct {
-	ID         int    `json:"-"`
-	Name       string `json:"name"`
-	Department string `json:"speciality"`
-	ProjectID  int    `json:"project"`
-}
 
 // MarshalJSON is a receiver functions => methods
 // func (e Employee) MarshalJSON() ([]byte, error) {
@@ -26,11 +23,8 @@ type Employee struct {
 // 	return []byte(jsonString), nil
 // }
 
-var employees = []Employee{
-	{1, "Gaurav", "LnD", 1001},
-	{2, "Sai Teja", "DBA", 10001},
-	{3, "Akshay", "SRE", 10002},
-}
+var repo = repository.NewInMemRepository()
+var svcV1 = service.NewV1(repo)
 
 func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -38,11 +32,19 @@ func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
 	// jsonData, _ := json.Marshal(employees)
 	// w.Write(jsonData)
 
+	employees, err := svcV1.Index()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
 	json.NewEncoder(w).Encode(employees)
 }
 
 func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
-	var newEmployee Employee
+	var newEmployee entities.Employee
 	err := json.NewDecoder(req.Body).Decode(&newEmployee)
 
 	if err != nil {
@@ -51,11 +53,16 @@ func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newEmployee.ID = len(employees) + 1
-	employees = append(employees, newEmployee)
+	createdEmp, err := svcV1.Create(newEmployee)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(newEmployee)
+	json.NewEncoder(w).Encode(createdEmp)
 }
 
 // func EmployeesHandler(w http.ResponseWriter, req *http.Request) {
@@ -96,6 +103,7 @@ func main() {
 	// r.HandleFunc("/employees", EmployeesIndexHandler)
 	// r.HandleFunc("/employees", EmployeeCreateHandler)
 
+	log.Println("Starting server on port: 8000...")
 	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 	// http.ListenAndServe(":8000", LoggingMiddleWare(r))
 }
