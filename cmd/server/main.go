@@ -35,7 +35,8 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	var repo = repository.NewInMemRepository()
+	// var repo = repository.NewInMemRepository()
+	var repo = repository.NewSQLRepository()
 	var svcV1 = service.NewV1(repo)
 	var empHandler = employeeHTTP.New(svcV1)
 
