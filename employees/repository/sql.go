@@ -64,8 +64,8 @@ func (repo sqlRepo) Create(newEmp entities.Employee) (*entities.Employee, error)
 	return &newEmp, nil
 }
 
-func NewSQLRepository() EmployeeRepository {
-	db, err := sql.Open("postgres", "postgres://localhost:5432/emp-demo?sslmode=disable")
+func NewSQLRepository(dbURL string) EmployeeRepository {
+	db, err := sql.Open("postgres", dbURL)
 
 	if err != nil {
 		log.Fatalln("Unable to connect:", err)

@@ -25,6 +25,25 @@ func LoggingMiddleWare(h http.Handler) http.HandlerFunc {
 	}
 }
 
+func envOrDefault(key string, dflt string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		val = dflt
+	}
+
+	return val
+}
+
+var (
+	port  string
+	dbURL string
+)
+
+func init() {
+	port = envOrDefault("PORT", "8000")
+	dbURL = envOrDefault("DB_URL", "postgres://localhost:5432/emp-demo?sslmode=disable")
+}
+
 func main() {
 	r := mux.NewRouter()
 
@@ -35,14 +54,14 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	// var repo = repository.NewInMemRepository()
-	var repo = repository.NewSQLRepository()
+	var repo = repository.NewInMemRepository()
+	// var repo = repository.NewSQLRepository(dbURL)
 	var svcV1 = service.NewV1(repo)
 	var empHandler = employeeHTTP.New(svcV1)
 
 	empHandler.SetupRoutes(r)
 
-	log.Println("Starting server on port: 8000...")
-	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
+	log.Println("Starting server on port: ", port, "...")
+	http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, r))
 	// http.ListenAndServe(":8000", LoggingMiddleWare(r))
 }
