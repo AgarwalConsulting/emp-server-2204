@@ -43,6 +43,31 @@ func TestCreateV1(t *testing.T) {
 	assert.Equal(t, expectedEmp, actualEmp)
 }
 
-// func FuzzCreateV1(f *testing.F) {
+func FuzzCreateV1(f *testing.F) {
+	jsonBody := `{"name": "Gaurav", "speciality": "LnD}`
+	f.Add(jsonBody)
 
-// }
+	f.Fuzz(func(t *testing.T, in string) {
+		t.Log("Input:", in)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := service.NewMockEmployeeService(ctrl)
+		sut := empHTTP.New(mockSvc)
+
+		reqBody := strings.NewReader(in)
+		req := httptest.NewRequest("POST", "/v1/employees", reqBody)
+
+		resRec := httptest.NewRecorder()
+
+		expectedEmp := entities.Employee{0, "Gaurav", "LnD", 1001}
+		mockSvc.EXPECT().Create(gomock.Any()).AnyTimes().Return(&expectedEmp, nil)
+
+		// sut.createV1(resRec, req)
+		sut.ServeHTTP(resRec, req)
+
+		res := resRec.Result()
+
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	})
+}

@@ -2,7 +2,7 @@ package entities
 
 type Employee struct {
 	ID         int    `json:"-"`
-	Name       string `json:"name"`
-	Department string `json:"speciality"`
-	ProjectID  int    `json:"project"`
+	Name       string `json:"name" validate:"required"`
+	Department string `json:"speciality" validate:"required"`
+	ProjectID  int    `json:"project" validate:"required"`
 }
